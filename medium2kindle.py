@@ -14,6 +14,7 @@ kindle_adress = 'example@kindle.com'
 def convert ( file_name, author ):
 	print("\nFile conversion started...")
 	
+	# ebook-convert file_name+".html" file_name+".mobi" --output-profile kindle --mobi-file-type=both --enable-heuristics --authors authors
 	subprocess.run(['ebook-convert', file_name+".html", file_name+".mobi", "--no-inline-toc", "--pretty-print", "--output-profile", "kindle", "--mobi-file-type=both", "--enable-heuristics", "--authors", author], stdout=subprocess.DEVNULL)
 
 	print("Conversion successful.")
@@ -64,7 +65,7 @@ def find_title (page):
 	title_tag = page.find('meta', {'property': 'twitter:title'})
 	
 	if title_tag is None:
-		#print('\nNo title tag. Trying to extract from article.')
+		print('\nNo title tag. Trying to extract from article.')
 		return page.title_tag.get_text().split('–')[0].split('-')[0]
 	else:
 		return title_tag['content']
@@ -73,7 +74,7 @@ def find_title (page):
 def sanitize_images (section, n):
 	for image in section.select('img[src]'):
 		n += 1
-		resource = urlopen(Request(image['src'], None, header))
+		resource = urlopen(Request(image['src'], None, header), timeout=10)
 		#print(image['src'])
 		
 		if image['src'].split('?')[-1] == 'q=20':
@@ -106,7 +107,7 @@ for article in range(1,len(article_links)):
 	header = {'User-Agent': 'Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11'}
 	
 	page_req = Request(url, None, header)
-	html = urlopen(page_req).read().decode('utf-8', 'ignore')
+	html = urlopen(page_req, timeout=10).read().decode('utf-8', 'ignore')
 	page = BeautifulSoup(html, "lxml")
 	
 	draw_line()
@@ -144,7 +145,11 @@ for article in range(1,len(article_links)):
 		page.find('svg').parent.parent.parent.parent.decompose()
 		
 		# you prolly need only the bigger one
-		sections = page.find_all('section')[2:4]
+		sections = page.find_all('section')
+		if len(sections) > 3:
+			sections = sections[2:-1]
+		else:
+			sections = sections[2:4]
 	
 	g = open(file_name+'.html', 'w')
 	g.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"><html lang="en"><head><title>' + title + '</title><meta http-equiv="content-type" content="text/html; charset=utf-8"/></head><body><div>')

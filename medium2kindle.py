@@ -15,15 +15,15 @@ def convert ( file_name, author ):
 	print("\nFile conversion started...")
 	
 	# ebook-convert file_name+".html" file_name+".mobi" --output-profile kindle --mobi-file-type=both --enable-heuristics --authors authors
-	subprocess.run(['ebook-convert', file_name+".html", file_name+".mobi", "--no-inline-toc", "--pretty-print", "--output-profile", "kindle", "--mobi-file-type=both", "--enable-heuristics", "--authors", author], stdout=subprocess.DEVNULL)
+	subprocess.run(['ebook-convert', file_name+".html", file_name+".mobi", "--no-inline-toc", "--pretty-print", "--output-profile", "kindle", "--mobi-file-type=both", "--authors", author], stdout=subprocess.DEVNULL)
 
 	print("Conversion successful.")
 
 
 def send (file_name):
 	print("\nSending file to Kindle device...")
-	
-	calibre_smtp = '--relay smtp.live.com --port 587 --username ' + hotmail_adress + ' --password ' + hotmail_pass + ' --encryption-method TLS ' + hotmail_adress + ' ' + kindle_adress + ' ""'
+	# you can add --fork but then photos will do weird shit. do sth to fix that.
+	calibre_smtp = ' --relay smtp.live.com --port 587 --username ' + hotmail_adress + ' --password ' + hotmail_pass + ' --encryption-method TLS ' + hotmail_adress + ' ' + kindle_adress + ' ""'
 	subprocess.call(['calibre-smtp', '-a', file_name+".mobi"] + calibre_smtp.split(), stdout=subprocess.DEVNULL)
 	
 	print("File sent.")
@@ -121,7 +121,7 @@ for article in range(1,len(article_links)):
 	old_design = page.find('div', {'class': 'section-content'}) is not None
 	
 	if old_design:
-		#print ("old design")
+		print ("oldest design")
 		
 		for match in page.find_all('div', {'class': 'aspectRatioPlaceholder-fill'}):
 			match.decompose()
@@ -137,19 +137,22 @@ for article in range(1,len(article_links)):
 		sections = page.find_all('div', {'class': 'section-content'})
 		
 	else:
+		sections = page.body.div.div.article
+		#I may try this:
+		#sections.div.section.contents[1].div.decompose()
 		#print ("new design")
-		try:
-			page.find('h1').decompose()
-		except:
-			pass	
-		page.find('svg').parent.parent.parent.parent.decompose()
+		#try:
+			#page.find('h1').decompose()
+		#except:
+			#pass	
+		#page.find('svg').parent.parent.parent.parent.decompose()
 		
-		# you prolly need only the bigger one
-		sections = page.find_all('section')
-		if len(sections) > 3:
-			sections = sections[2:-1]
-		else:
-			sections = sections[2:4]
+		#you prolly need only the bigger one
+		#sections = page.find_all('section')
+		#if len(sections) > 3:
+			#sections = sections[2:-1]
+		#else:
+			#sections = sections[2:4]
 	
 	g = open(file_name+'.html', 'w')
 	g.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"><html lang="en"><head><title>' + title + '</title><meta http-equiv="content-type" content="text/html; charset=utf-8"/></head><body><div>')
